@@ -1,0 +1,156 @@
+         
+         org  50000
+         
+START    ld   a,16
+RESTART  ld   (DEFSPEED+1),a
+         ld   (SPEED+1),a
+         xor  a
+         out  (254),a
+         
+SCENE    ld   hl,22528
+         ld   de,22529
+         ld   bc,768
+         ld   (hl),a
+         ldir 
+         
+         ld   c,3
+         ld   hl,22528+37
+         ld   (EPOS+1),hl
+         ld   de,32+8
+         ld   a,9
+ENEMIES  ld   b,8
+LINE     ld   (hl),a
+         inc  hl
+         inc  hl
+         inc  hl
+         djnz LINE
+         add  hl,de
+         add  a,9
+         dec  c
+         jr   nz,ENEMIES
+KEYS     halt 
+SHIP     ld   hl,23264+15
+         ld   (hl),7
+         ld   bc,32766
+         in   a,(c)
+         rra  
+         rra  
+         jr   c,KEYRIGHT
+FIRE     call BULLET
+         jr   nz,KEYRIGHT
+         ld   (BULLET+1),hl
+KEYRIGHT rra  
+         jr   c,KEYLEFT
+RIGHT    ld   a,l
+         inc  a
+         jr   z,STARTMOV
+         inc  hl
+         jr   MOVE
+KEYLEFT  rra  
+         jr   c,STARTMOV
+LEFT     ld   a,l
+         and  31
+         jr   z,STARTMOV
+         dec  hl
+MOVE     ld   (SHIP+1),hl
+STARTMOV call BULLET
+         ld   de,32
+         jr   z,NOBULLET
+         push hl
+         ld   l,c
+         ld   h,b
+         ld   (hl),d
+         sbc  hl,de
+         ld   a,h
+         cp   88
+         jr   c,RSBULLET
+         ld   a,(hl)
+         or   a
+         jr   z,NOHIT
+         ld   (hl),d
+RSBULLET ld   hl,0
+         jr   STBULLET
+NOHIT    
+STBULLET ld   (BULLET+1),hl
+         pop  hl
+NOBULLET ld   (hl),63
+         ld   hl,(BULLET+1)
+         ld   (hl),d
+EPOS     ld   hl,0
+         ld   bc,128+23
+SPEED    ld   a,16
+         dec  a
+         jr   nz,SETSPEED
+DEFSPEED ld   a,16
+SETSPEED ld   (SPEED+1),a
+         
+EMOVE    call z,ELEFT
+         ld   hl,(BULLET+1)
+         ld   (hl),63+64
+         jp   KEYS
+         
+ELEFT    ld   a,l
+         and  31
+         jr   nz,ELMOVE
+         ld   hl,ERIGHT
+SETDOWN  ld   (EMOVE+1),hl
+         jr   EDOWN
+         
+ELMOVE   ld   e,l
+         ld   d,h
+         dec  de
+         ldir 
+         ld   hl,EPOS+1
+         dec  (hl)
+         ret  
+         
+ERIGHT   add  hl,bc
+         ld   a,l
+         dec  a
+         and  31
+         jr   nz,ERMOVE
+         ld   hl,ELEFT
+         jr   SETDOWN
+ERMOVE   ld   e,l
+         ld   d,h
+         inc  de
+         inc  bc
+         inc  bc
+         lddr 
+         ld   hl,EPOS+1
+         inc  (hl)
+         ret  
+         
+EDOWN    ld   hl,(EPOS+1)
+         add  hl,de
+         ld   (EPOS+1),hl
+         add  hl,bc
+         push hl
+         sbc  hl,de
+         pop  de
+         inc  bc
+         ld   a,d
+         cp   91
+         jr   z,GAMEOVR
+         lddr 
+         ld   c,32
+         lddr 
+         ld   b,160
+         xor  a
+CHECK    or   (hl)
+         ret  nz
+         inc  hl
+         djnz CHECK
+LEVELOVR ld   a,(DEFSPEED+1)
+         rra  
+GAMEOVR  pop  hl
+         jp   RESTART
+         
+BULLET   ld   bc,0
+         ld   e,a
+         ld   a,b
+         or   c
+         ld   a,e
+         ret  
+         
+LEN      equ  $-START

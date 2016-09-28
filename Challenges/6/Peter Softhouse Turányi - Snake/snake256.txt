@@ -1,0 +1,180 @@
+         
+         org  50000
+         
+GREEN    equ  36+64
+WALL     equ  0
+         
+START    
+         xor  a
+         out  (254),a
+         
+         ld   a,22
+SCENE    ld   hl,22528
+         ld   de,22529
+         ld   bc,32
+         ld   (hl),l
+         ldir 
+AZ       inc  hl
+         inc  de
+         ld   (hl),GREEN
+         ld   c,30
+         ldir 
+         ld   (hl),b
+         inc  hl
+         inc  de
+         ld   (hl),b
+         dec  a
+         jr   nz,AZ
+         ld   c,31
+         ldir 
+         ld   hl,WORMBUF
+         ld   de,89*256+111
+         ld   (hl),e
+         inc  hl
+         ld   (hl),d
+         inc  hl
+         inc  de
+         ld   (hl),e
+         inc  hl
+         ld   (hl),d
+         ld   (TAIL+1),hl
+         inc  hl
+         push hl
+         pop  de
+         inc  de
+         ld   bc,765
+         ld   (hl),a
+         ldir 
+         ld   hl,2
+         ld   (WLEN+1),hl
+         
+SEED     ld   de,0
+         ld   h,e
+         ld   l,253
+         ld   a,d
+         or   a
+         sbc  hl,de
+         sbc  a,0
+         ld   e,a
+         ld   d,0
+         sbc  hl,de
+         jr   nc,AB
+AB       ld   (SEED+1),hl
+         ld   a,r
+         and  91
+         ld   h,a
+         ld   a,(hl)
+         cp   GREEN
+         jr   nz,SEED
+         
+         ld   (hl),36
+         ld   hl,GAME
+GAME     push hl
+WLEN     ld   hl,0
+         dec  hl
+         add  hl,hl
+         ld   c,l
+         ld   b,h
+TAIL     ld   hl,0
+         push hl
+         ld   d,(hl)
+         dec  hl
+         ld   e,(hl)
+         dec  hl
+         ex   de,hl
+         ex   (sp),hl
+MOVE     ld   a,(de)
+         ld   (hl),a
+         dec  hl
+         dec  de
+         dec  bc
+         ld   a,b
+         or   c
+         jr   nz,MOVE
+         ld   d,(hl)
+         dec  hl
+         ld   e,(hl)
+DIREC    ld   bc,-1
+         ex   de,hl
+         add  hl,bc
+         
+;vyber zasobnik pred restartom
+         pop  bc
+         
+TESTEND  ld   a,(hl)
+         or   a
+         jr   z,JP_START
+         cp   54
+JP_START jp   z,START
+         cp   36
+         jr   nz,SET_HEAD
+         exx  
+         ld   hl,(TAIL+1)
+         dec  hl
+         ld   e,(hl)
+         inc  hl
+         ld   d,(hl)
+         inc  hl
+         ld   (hl),e
+         inc  hl
+         ld   (hl),d
+         ld   (TAIL+1),hl
+         ld   hl,(WLEN+1)
+         inc  hl
+         ld   (WLEN+1),hl
+         pop  hl
+         ld   hl,SEED
+         push hl
+         exx  
+         
+;uloz znovu co si vybral stack
+SET_HEAD push bc
+         
+         ex   de,hl
+         ld   (hl),e
+         inc  hl
+         ld   (hl),d
+         pop  hl
+         ld   (hl),GREEN
+         ld   hl,(WLEN+1)
+         ld   b,h
+         ld   c,l
+         ld   hl,(TAIL+1)
+DRAW     ld   d,(hl)
+         dec  hl
+         ld   e,(hl)
+         dec  hl
+         ld   a,54
+         ld   (de),a
+         dec  bc
+         ld   a,b
+         or   c
+         jr   nz,DRAW
+         
+         ld   b,8
+WAIT     halt 
+         djnz WAIT
+KEYS     ld   bc,32766
+         in   a,(c)
+         rra  
+         jr   c,KEYUP
+         ld   hl,32
+         jr   SETDIREC
+KEYUP    rra  
+         jr   c,KEYRIGHT
+         ld   hl,-32
+         jr   SETDIREC
+KEYRIGHT rra  
+         jr   c,KEYLEFT
+         ld   hl,1
+         jr   SETDIREC
+KEYLEFT  rra  
+         jr   c,JP_GAME
+         ld   hl,-1
+SETDIREC ld   (DIREC+1),hl
+JP_GAME  pop  hl
+         jp   (hl)
+         
+LEN      equ  $-START
+         
+WORMBUF  defs 2*768

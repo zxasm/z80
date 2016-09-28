@@ -1,0 +1,189 @@
+?   * TORNADO *                                                 
+; snake                                             
+; 48K memory needed, can fit in 16K but needs rewriting.
+; therefore start also somewhere in uppermemory            
+                                                                
+           ORG  40000                                           
+           DUMP 40000                                           
+                                                                
+wstart     LD   A,(IX+3)          ; get winner colour             
+           OUT  (254),A           ; indicate winner                              
+
+;start of game                                                                 
+w4enter    XOR  A                                               
+           IN   A,(254)           ; read keyboard, all rows
+           AND  16                ; start bit? 5 6 T Y G H B N    
+           JR   NZ,w4enter        ; wait startkey (not enter!)  
+           LD   (trcnt+1),A       ; reset tailcounter           
+                                                                
+cls        LD   DE,23295          ; erase screen and attr       
+cls1       LD   (DE),A                                          
+           SET  7,D                                             
+           LD   (DE),A            ; clear track too             
+           RES  7,D                                             
+           DEC  DE                                              
+           BIT  6,D               ; out of RAM                  
+           JR   NZ,cls1           ; only clear RAM-screen       
+           LD   H,A                                             
+           LD   L,A                                             
+           LD   (init),HL         ; both start up               
+                                                                
+startxy    LD   BC,#081C          ; player 1                    
+           LD   E,C               ; first "possible" move       
+           EXX                    ; alternate reg per player                              
+           LD   BC,#0808          ; player 2                    
+           LD   E,C               ; idem                              
+                                                                
+gameloop   LD   IX,init           ; set IX to player 1          
+           LD   SP,60000          ; clear SP from below         
+gameloop2  PUSH BC                ; save xy                     
+           INC  B                 ; undo pos 0                              
+           INC  C                 ; undo pos 0                              
+           LD   HL,22528-1        ; calc attr                   
+ffield     INC  HL                                              
+           DEC  C                 ; never first zero                              
+           JR   NZ,ffield         ; x pos                              
+           LD   C,32              ; y = 32 * x                              
+           DJNZ ffield                                          
+           LD   A,(HL)            ; fetch current position      
+           LD   B,(IX+2)          ; color of snake              
+           LD   (HL),B            ; set attr                    
+           OR   A                                               
+           JR   NZ,wstart         ; tailbyte, already used      
+           SET  7,H               ; trackermemory +32K further               
+           LD   (HL),E            ; set index previous          
+           LD   B,C               ; always 32                   
+findtail   DEC  BC                                              
+           LD   A,B                                             
+           OR   C                                               
+           JR   Z,wstart          ; around on tail, failsave              
+           LD   A,(HL)            ; pointer to previous field         
+           SUB  33                ; pointer without shifting                
+           LD   E,A               ; pointer to E                
+           SBC  A,A               ; 0 or 255                    
+           LD   D,A               ; set highbyte too            
+           ADD  HL,DE             ; calculate previous field          
+           LD   A,(HL)                                          
+           OR   A                 ; also reset of carry                              
+           JR   NZ,findtail       ; no end of tail passed       
+           SBC  HL,DE             ; back to end of tail                
+           POP  BC                ; get xy                               
+           PUSH HL                ; save end for erase later              
+                                                                
+                                                                
+; do move                                                       
+           LD   D,254             ; upkey indicator             
+           DEFB #DD               ; ld a,ixl                    
+           LD   A,L                                             
+           CP   init*256/256      ; lowbyte of init             
+           JR   NZ,keybpl2        ; own routine per player      
+                                                                
+; read keys player 1                                            
+keybpl1    LD   A,%11111011       ; Q-T                         
+           IN   A,(254)                                         
+           BIT  1,A                                             
+           JR   Z,kup             ; do up                              
+           LD   A,%11111101       ; A-G                         
+           IN   A,(254)                                         
+           RRA                                                  
+           JR   NC,kleft          ; do left                              
+           RRA                                                  
+           JR   NC,kright         ; do right                              
+           LD   A,%11111110       ; SH-V                        
+           OUT  (254),A           ; clear winner, set yellow
+           IN   A,(254)                                         
+           BIT  1,A                                             
+           JR   downtest          ; test at player2 saves 2       
+                                                                
+; read keys player 2                                            
+keybpl2    LD   A,%11011111       ; Y-P                         
+           IN   A,(254)                                         
+           BIT  2,A                                             
+           JR   Z,kup             ; do up                              
+           LD   A,%10111111       ; H-Enter                     
+           IN   A,(254)                                         
+           BIT  2,A                                             
+           JR   Z,kright          ; do right                              
+           BIT  3,A                                             
+           JR   Z,kleft           ; do left                              
+           LD   A,%01111111       ; B-space                     
+           IN   A,(254)                                         
+           BIT  2,A                                             
+downtest   JR   Z,kdown           ; do down                              
+                                                                
+nokey      INC  D                 ; nokey, 255                  
+                                                                
+; when rotated remains 255                                      
+                                                                
+kright     RLC  D                 ; rotate to right bit         
+kleft      RLC  D                                               
+kdown      RLC  D                                               
+kup        LD   A,D                                             
+                                                                
+keyread    LD   D,A               ; save old read from below    
+           RRA                    ; analyze read                
+           LD   E,65              ; prev down                   
+           JR   NC,up             ; do up                       
+           RRA                                                  
+           LD   E,1               ; prev up                     
+           JR   NC,down           ; do down                     
+           RRA                                                  
+           LD   E,34              ; prev right                  
+           JR   NC,left           ; do left                     
+           RRA                                                  
+           LD   E,32              ; prev left                   
+           LD   A,(IX)            ; fetch old move              
+           JR   C,keyread         ; false key                   
+right      INC  C                                               
+           DEFB 62                ; left hidden in LD A,N                              
+left       DEC  C                                               
+           DEFB 62                ; up hidden in LD A,N                              
+up         DEC  B                                               
+           DEFB 62                ; down hidden in LD A,N                              
+down       INC  B                                               
+           LD   A,B               ; out of screen               
+           CP   24                                              
+jrdead     JP   NC,wstart         ; dead, below 1 byte saved                        
+           LD   A,C                                             
+           CP   32                                              
+           JR   NC,jrdead         ; out of screen, dead          
+
+; a valid move is possible
+setmove    LD   A,D               ; fetch the valid move       
+           LD   (IX),A            ; set as next old move           
+                                                                
+           EXX                    ; other player registers      
+           DEFB #DD               ; ld a,ixl                    
+           LD   A,L                                             
+           CP   init*256/256                                    
+           INC  IX                ; set IX to player 2          
+           JP   Z,gameloop2       ; do both players             
+                                                                
+           HALT                   ; now some delay              
+           HALT                   ; before erasing tails                              
+           HALT                                                 
+                                                                
+trcnt      LD   A,0               ; step counter                
+           INC  A                                               
+           AND  31                                              
+           LD   (trcnt+1),A                                     
+           POP  HL                ; fetch first from stack      
+           JR   Z,noerase                                       
+                                                                
+erase      XOR  A                                               
+           LD   (HL),A            ; reset tracker               
+           RES  7,H                                             
+           LD   (HL),A            ; erase visible tail          
+           POP  HL                ; fetch second                
+           LD   (HL),A                                          
+           RES  7,H                                             
+           LD   (HL),A            ; erase tail 2                
+
+noerase    JP   gameloop          ; playon, clear stack         
+                                                                
+init       DEFB 0,0               ; start movement              
+           DEFB 36,45             ; color of snake              
+           DEFB 36                ; winner/loser with previous                
+                                                                
+; init can be set here too, for data it would save 2 bytes      
+; since program will clear it. But game is in range.

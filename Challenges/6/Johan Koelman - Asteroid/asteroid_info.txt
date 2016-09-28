@@ -1,0 +1,33 @@
+Asteroidbelt
+
+Travel your ship trough the asteroidbelt.
+
+Controls:
+
+(Re)Startgame : 5, T, Y, G, H, B, N
+Left: Q, A, Shift
+Right: W, S, Z
+
+
+
+Source:
+Controls in Tornado
+Sh.3 page down
+Sh.4 page up
+cursor 
+E-cursor back to BASIC
+
+Technical info:
+Display of 32 lines on screen, 5 chardata + 1 blank
+Size of characterset: 60 bytes.
+A lot of reuse of registers.
+A-Result of IN is start of reading keyboard again.
+A-Result of keypress used to clear screen.
+A-Result of scroll is entry for reading ship-keys
+Hidden commands in other Z80 to save byte
+Carry always reset on calculating screen saves a byte
+Ship on top save a byte indicating location of ship
+Reverse order of numbers in characterset saves a byte in score-routine
+8 bit horizontal movement, no bitposition needed, skipped from ROM-routine 
+Position of SCORE in memory used to find final position.
+Printing done on line 3 to find end of byte in AND 7
