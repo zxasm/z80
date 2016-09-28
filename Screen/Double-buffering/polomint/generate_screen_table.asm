@@ -74,4 +74,4 @@ next_screen_line:
 ; DONT FORGET: Anything code/data located after here for 384 bytes will be destroyed when the generate routine is called !!!
 ; although 384 bytes is a handy chunk for other stuff, which can be overwritten if's only being used once, eg, music etc..
 screen_table:
-
+	ds 384
