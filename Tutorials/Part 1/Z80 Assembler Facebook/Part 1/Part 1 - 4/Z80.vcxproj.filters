@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="main.asm" />
+    <None Include="clean.bat">
+      <Filter>Batch Files</Filter>
+    </None>
+    <None Include="rebuild.bat">
+      <Filter>Batch Files</Filter>
+    </None>
+    <None Include="build.bat">
+      <Filter>Batch Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Batch Files">
+      <UniqueIdentifier>{d455c6d0-d6ec-4255-badb-14336203a215}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
