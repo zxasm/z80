@@ -1,0 +1,38 @@
+INSTALLATION GUIDE FOR UNIX SYSTEMS:
+------------------------------------
+
+1) Download pasmo assembler source code:
+   $ wget http://pasmo.speccy.org/bin/pasmo-0.5.3.tgz
+
+2) Extract pasmo-0.5.3.tgz:
+   $ tar -xzf pasmo-0.5.3.tgz   
+
+3) cd to the extracted pasmo-0.5.3 directory:
+   $ cd pasmo-0.5.3
+
+4) Configure the package:
+   $ ./configure
+
+5) Compile pasmo:
+   $ make
+
+6) Install pasmo to your system:
+   $ sudo make install
+
+7) Install fuse (the emulator). I used this command on Mac
+   $ brew install fuse-emulator
+
+   There should be an equivalent package on debian and other systems, like:
+   $ sudo apt install fuse-emulator-gtk spectrum-roms
+
+8) Run fuse to make sure it is installed properly:
+   $ fuse
+
+9) Chdir to any example directory (for instance, example3, provided by Adrian):
+   $ cd <path-to-repo>/tutorials/facebook/part1/example1
+
+A) Run make to compile the assembler file
+   $ make
+
+B) Finally, run make emu to emulate the file
+   $ make emu
