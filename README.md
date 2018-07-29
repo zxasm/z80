@@ -15,4 +15,11 @@ This repository contains various code snippets, examples, and tutorials for Z80 
 Code in this repository is mainly written for ZX Spectrum machines. For information on how to 
 install Z80 assembler and Spectrum emulators, please refer to INSTALL file.
 
+Manifest
+--------
+
+    * tutorials/     Tutorials on how to program Z80 on Spectrum.
+    * challenges/    Interesting problems/code challenges.
+    * utilities/     Some cool utilities like memory manager.
+
 Have fun!
