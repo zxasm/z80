@@ -1,0 +1,5 @@
+MyRoutine	EQU 0F618H
+PauseLoop	EQU 0F613H
+Screen1		EQU 0DB00H
+Screen2		EQU 0C000H
+Start		EQU 0F600H
